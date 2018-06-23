@@ -26,9 +26,12 @@
 #include <khash.h>
 #include <kvec.h>
 #include <errno.h>
+#include "criterion/options.h"
 #include "criterion/output.h"
 #include "log/logging.h"
+#include "string/string.h"
 #include "string/i18n.h"
+#include "compat/path.h"
 
 typedef const char *const msg_t;
 
@@ -123,6 +126,18 @@ void process_all_output(struct criterion_global_stats *stats)
                 f = stdout;
             } else if (!strcmp(path, "/dev/stderr")) {
                 f = stderr;
+            } else if (cri_path_isdirectory(path)) {
+                const char *short_executable_name = basename_compat(criterion_options.executable_name);
+                cri_string *output_path = cri_path_gen_unique_filename(path, short_executable_name, name);
+                f = fopen(cri_string_data(output_path), "w");
+
+                if (!f) {
+                    int errno2 = errno;
+                    criterion_perror(_(msg_err), cri_string_data(output_path), name, strerror(errno2));
+                    continue;
+                }
+
+                cri_string_free(output_path);
             } else {
                 f = fopen(path, "w");
             }
