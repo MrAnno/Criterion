@@ -37,6 +37,7 @@ bool cri_path_isdirectory(const char *path);
 bool cri_path_exists(const char *path);
 char *cri_path_relativeof(const char *path);
 cri_string *cri_path_combine(cri_string *output, const char *path, ...);
+cri_string *cri_path_gen_unique_filename(const char *path, const char *filename, const char *extension);
 
 cri_string *cri_path_build(char separator, cri_string *output, const char *path, ...);
 
