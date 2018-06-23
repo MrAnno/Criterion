@@ -23,6 +23,7 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "path.h"
 #include "config.h"
@@ -33,6 +34,15 @@
 # include <limits.h>
 #elif defined (HAVE_GETCURRENTDIRECTORY)
 # include <windows.h>
+#endif
+
+#if defined (_WIN32) && !defined (__CYGWIN__)
+# include <windows.h>
+#else
+# include <unistd.h>
+
+# include <sys/types.h>
+# include <sys/stat.h>
 #endif
 
 const char *basename_compat(const char *str)
@@ -137,4 +147,15 @@ char *cri_path_relativeof(const char *cstpath)
     free(path);
 
     return rel;
+}
+
+bool cri_path_isdirectory(const char *path)
+{
+#if defined (_WIN32) && !defined (__CYGWIN__)
+    DWORD attr = GetFileAttributesA(path);
+    return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    struct stat sb;
+    return stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
+#endif
 }
