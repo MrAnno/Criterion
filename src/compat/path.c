@@ -276,3 +276,21 @@ cri_string *cri_path_build(char separator, cri_string *output, const char *first
 
     return output;
 }
+
+cri_string *cri_path_gen_unique_filename(const char *path, const char *filename, const char *extension)
+{
+    cri_string *unique_path = NULL;
+    size_t counter = 0;
+
+    do {
+        unique_path = cri_path_combine(unique_path, path, filename, NULL);
+        if (counter)
+            cri_string_append_printf(unique_path, "_%d.%s", counter, extension);
+        else
+            cri_string_append_printf(unique_path, ".%s", extension);
+
+        ++counter;
+    } while (cri_path_exists(cri_string_data(unique_path)));
+
+    return unique_path;
+}
