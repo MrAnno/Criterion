@@ -27,11 +27,16 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "string/string.h"
+
 const char *basename_compat(const char *str);
 
 char *cri_path_cwd(void);
 bool cri_path_isrelative(const char *path);
 bool cri_path_isdirectory(const char *path);
 char *cri_path_relativeof(const char *path);
+cri_string *cri_path_combine(cri_string *output, const char *path, ...);
+
+cri_string *cri_path_build(char separator, cri_string *output, const char *path, ...);
 
 #endif /* !COMPAT_PATH_H_ */
