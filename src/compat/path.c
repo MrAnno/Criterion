@@ -166,6 +166,17 @@ bool cri_path_isdirectory(const char *path)
 #endif
 }
 
+bool cri_path_exists(const char *path)
+{
+#if defined (_WIN32) && !defined (__CYGWIN__)
+    DWORD attr = GetFileAttributesA(path);
+    return attr != INVALID_FILE_ATTRIBUTES;
+#else
+    struct stat sb;
+    return stat(path, &sb) == 0;
+#endif
+}
+
 
 static inline size_t first_non_separator_index(const char *str)
 {
