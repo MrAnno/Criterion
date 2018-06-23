@@ -24,6 +24,8 @@
 #ifndef CRITERION_NEW_MEMORY_H_
 #define CRITERION_NEW_MEMORY_H_
 
+#include <stddef.h>
+
 #include "../internal/common.h"
 
 struct cr_mem {
@@ -44,6 +46,9 @@ struct cr_mem {
 };
 
 #ifdef __cplusplus
+# include <string>
+# include <ostream>
+
 namespace criterion {
     using memory = cr_mem;
 }
