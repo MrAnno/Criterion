@@ -45,6 +45,12 @@
 # include <sys/stat.h>
 #endif
 
+#if defined (_WIN32) || defined (__CYGWIN__)
+# define CRI_PATH_SEPARATOR '\\'
+#else
+# define CRI_PATH_SEPARATOR '/'
+#endif
+
 const char *basename_compat(const char *str)
 {
     const char *start = str;
@@ -158,4 +164,104 @@ bool cri_path_isdirectory(const char *path)
     struct stat sb;
     return stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
 #endif
+}
+
+
+static inline size_t first_non_separator_index(const char *str)
+{
+    size_t idx = 0;
+    while (str[idx] && (str[idx] == '/' || str[idx] == '\\'))
+        ++idx;
+
+    return idx;
+}
+
+static inline size_t first_trailing_separator_index(const char *str)
+{
+    size_t idx = strlen(str);
+    while (idx > 0 && (str[idx - 1] == '/' || str[idx - 1] == '\\'))
+        --idx;
+
+    return idx;
+}
+
+/*
+ * cri_path_build_va():
+ * - skips empty elements
+ * - the boundary between two elements is cleaned (separators are removed), one separator is inserted
+ * - separators at the beginning and the end of the path are not removed
+ */
+static cri_string *cri_path_build_va(char separator, cri_string *output, const char *first_path_part, va_list *vl)
+{
+    if (!first_path_part)
+        return NULL;
+
+    if (!output)
+        output = cri_string_new_reserve(256);
+    else
+        cri_string_clear(output);
+
+    size_t last_end_idx = 0;
+    bool is_first_non_empty = true, leading = false;
+    const char *last_path_part = first_path_part;
+
+    while (true) {
+        const char *path_part = first_path_part ? first_path_part : va_arg(*vl, const char *);
+        first_path_part = NULL;
+
+        if (!path_part)
+            break;
+
+        if (!*path_part)
+            continue;
+
+        last_path_part = path_part;
+
+        size_t begin_idx = first_non_separator_index(path_part);
+        size_t end_idx = first_trailing_separator_index(path_part);
+        last_end_idx = end_idx;
+
+        if (!leading) {
+            cri_string_append_length(output, path_part, begin_idx);
+            leading = true;
+        }
+
+        if (begin_idx >= end_idx) {
+            last_end_idx = is_first_non_empty ? begin_idx : end_idx;
+            continue;
+        }
+
+        if (!is_first_non_empty)
+            cri_string_append_char(output, separator);
+
+        is_first_non_empty = false;
+
+        cri_string_append_length(output, path_part + begin_idx, end_idx - begin_idx);
+    }
+
+    cri_string_append(output, last_path_part + last_end_idx);
+
+    return output;
+}
+
+cri_string *cri_path_combine(cri_string *output, const char *first_path_part, ...)
+{
+    va_list vl;
+
+    va_start(vl, first_path_part);
+    output = cri_path_build_va(CRI_PATH_SEPARATOR, output, first_path_part, &vl);
+    va_end(vl);
+
+    return output;
+}
+
+cri_string *cri_path_build(char separator, cri_string *output, const char *first_path_part, ...)
+{
+    va_list vl;
+
+    va_start(vl, first_path_part);
+    output = cri_path_build_va(separator, output, first_path_part, &vl);
+    va_end(vl);
+
+    return output;
 }
