@@ -62,6 +62,8 @@ set(SOURCE_FILES
   src/string/fmt.h
   src/string/i18n.c
   src/string/i18n.h
+  src/string/string.c
+  src/string/string.h
   src/entry/options.c
   src/entry/params.c
   src/entry/entry.c
