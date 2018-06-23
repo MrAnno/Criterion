@@ -1,4 +1,5 @@
 #include "criterion/criterion.h"
+#include "criterion/new/assert.h"
 #include "criterion/alloc.h"
 
 struct Obj {
