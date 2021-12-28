@@ -1,0 +1,60 @@
+_pipeline: &pipeline
+  info_script: |
+    meson --version
+    ninja --version
+  configure_script: meson build
+  compile_script: ninja -C build
+  test_script: ninja -C build test
+
+Debian (gcc)_task:
+  container:
+    image: snaipe/ci-meson:debian-10
+  <<: *pipeline
+
+Alpine (gcc,x86_64)_task:
+  container:
+    image: snaipe/ci-meson:alpine
+  <<: *pipeline
+
+Alpine (gcc,i386)_task:
+  container:
+    image: snaipe/ci-meson:alpine-x86
+  <<: *pipeline
+
+Alpine (gcc,arm)_task:
+  container:
+    image: snaipe/ci-meson:alpine-armhf
+  env:
+    CIRRUS_SHELL: /sbin/qemu-sh
+  <<: *pipeline
+
+Alpine (gcc,aarch64)_task:
+  container:
+    image: snaipe/ci-meson:alpine-aarch64
+  env:
+    CIRRUS_SHELL: /sbin/qemu-sh
+  <<: *pipeline
+
+MacOS_task:
+  osx_instance:
+    image: monterey-xcode-13.2
+  setup_script: brew install meson
+  <<: *pipeline
+
+FreeBSD_task:
+  freebsd_instance:
+    image_family: freebsd-13-0
+  setup_script: pkg install -y meson
+  <<: *pipeline
+
+Windows_task:
+  windows_container:
+    image: cirrusci/windowsservercore:cmake
+    os_version: 2019
+  env:
+    PATH: C:\\Python;C:\\Python\\Scripts;C:\\ProgramData\\chocolatey\\lib\\ninja\\tools;%PATH%
+  meson-setup_script: |-
+    choco install -y --no-progress python3 --params "/InstallDir:C:\Python"
+    pip install meson
+  ninja-setup_script: choco install -y --no-progress ninja
+  <<: *pipeline
