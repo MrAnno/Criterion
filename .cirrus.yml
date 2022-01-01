@@ -36,6 +36,14 @@ Alpine (gcc,i386)_task:
   setup_script: *alpine-deps
   <<: *pipeline
 
+Debian (gcc,arm32v5)_task:
+  arm_container:
+    image: arm32v5/debian:11
+  setup_script: &alpine-arm-deps |-
+    apt-get update
+    apt-get install -y build-essential pkg-config meson ninja-build cmake git libffi-dev libgit2-dev libnanomsg-dev python3-cram
+  <<: *pipeline
+
 Alpine (gcc,arm32v6)_task:
   arm_container:
     image: arm32v6/alpine:3
