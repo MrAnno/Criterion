@@ -1,0 +1,50 @@
+name: Version bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (major.minor.patch)'
+        required: true
+      abi-version:
+        description: 'ABI version (major.minor.patch)'
+        required: true
+
+env:
+  VERSION: ${{ github.event.inputs.version }}
+  ABI_VERSION: ${{ github.event.inputs.abi-version }}
+  GITHUB_TOKEN: ${{ github.token }}
+
+jobs:
+  bump-version:
+    name: "Bump version"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Criterion
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create branch for version bump
+        run: git switch -c "release/bump-v${VERSION}"
+
+      - name: Bump version
+        run: |
+          version_filter="(version\s*:\s*')[0-9a-z.+-]+'"
+          sed -E -i "s|${version_filter}|\1${VERSION}'|g" meson.build
+          sed -E -i "s|${version_filter}|\1${ABI_VERSION}'|g" src/meson.build
+
+          git commit -a -m "release: version bump to v${VERSION}"
+
+      - name: Open pull request
+        run: |
+          git push --force origin "release/bump-v${VERSION}"
+          gh pr create --base master --head "release/bump-v${VERSION}" \
+            --title "release: version bump to v${VERSION}" --body "" \
+            --label "version-bump"
