@@ -91,7 +91,7 @@ libcriterion = both_libraries('criterion', sources,
 	c_args: [
 		'-D__USE_MINGW_ANSI_STDIO',
 	],
-	version: '3.1.0',
+	version: '0.0.2',
 	dependencies: deps,
 	install: true,
 	link_args: cc.get_supported_link_arguments([
