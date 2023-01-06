@@ -31,12 +31,23 @@
 #include "err.h"
 #include "compat/process.h"
 
+#define CRI_PROTO_TIMEOUT (60 * 1000)
+
+static void set_nn_socket_timeout(int sock)
+{
+    int timeout = CRI_PROTO_TIMEOUT;
+    nn_setsockopt(sock, NN_SOL_SOCKET, NN_SNDTIMEO, &timeout, sizeof(timeout));
+    nn_setsockopt(sock, NN_SOL_SOCKET, NN_RCVTIMEO, &timeout, sizeof(timeout));
+}
+
 int cri_proto_bind(const char *url)
 {
     int sock = nn_socket(AF_SP, NN_REP);
 
     if (sock < 0)
         return -1;
+
+    set_nn_socket_timeout(sock);
 
     if (nn_bind(sock, url) < 0)
         goto error;
@@ -54,6 +65,8 @@ int cri_proto_connect(const char *url)
 
     if (sock < 0)
         return -1;
+
+    set_nn_socket_timeout(sock);
 
     if (nn_connect(sock, url) < 0)
         goto error;
