@@ -106,6 +106,7 @@ void init_server_context(struct server_ctx *sctx, struct criterion_global_stats 
 
 void destroy_client_context(struct client_ctx *ctx)
 {
+    fprintf(stderr, "destroy_client_context\n");
     if (ctx->kind == WORKER) {
         int rc = bxf_wait(ctx->instance, BXF_FOREVER);
         if (rc < 0)
@@ -120,6 +121,7 @@ void destroy_client_context(struct client_ctx *ctx)
 
 void destroy_server_context(struct server_ctx *sctx)
 {
+    fprintf(stderr, "destroy_server_context\n");
     khint_t k;
     struct client_ctx v;
 
@@ -152,6 +154,7 @@ struct client_ctx *add_client_from_worker(struct server_ctx *sctx,
 
 void remove_client_by_pid(struct server_ctx *sctx, int pid)
 {
+    fprintf(stderr, "remove_client_by_pid\n");
     khint_t k = kh_get(ht_client, sctx->subprocesses, pid);
 
     if (k != kh_end(sctx->subprocesses)) {

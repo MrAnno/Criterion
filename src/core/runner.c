@@ -56,6 +56,8 @@
 #include "runner_coroutine.h"
 #include "stats.h"
 
+#include <pthread.h>
+
 #ifdef __GNUC__
 # include <valgrind/valgrind.h>
 #else
@@ -263,6 +265,7 @@ static void run_tests_async(struct criterion_test_set *set,
         const char *url,
         int socket)
 {
+    fprintf(stderr, "run_tests_async %d %ld\n", getpid(), pthread_self());
     ccrContext ctx = 0;
 
     size_t nb_workers = DEF(criterion_options.jobs, get_processor_count());

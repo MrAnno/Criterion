@@ -24,6 +24,9 @@
 #include <errno.h>
 
 #include "mutex.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
 
 #ifdef HAVE_WIN32_SYNCHAPI
 # include <synchapi.h>
@@ -66,6 +69,7 @@ end:
 
 int cri_mutex_init(struct cri_mutex *mutex)
 {
+fprintf(stderr, "cri_mutex_init %d %ld\n", getpid(), pthread_self());
 #ifdef HAVE_WIN32_THREADS
     InitializeCriticalSection(&mutex->mutex);
     return 0;
@@ -81,6 +85,7 @@ int cri_mutex_init(struct cri_mutex *mutex)
 
 int cri_mutex_lock(struct cri_mutex *mutex)
 {
+    fprintf(stderr, "cri_mutex_lock %d %ld\n", getpid(), pthread_self());
 #ifdef HAVE_WIN32_THREADS
     EnterCriticalSection(&mutex->mutex);
     return 0;
@@ -93,6 +98,7 @@ int cri_mutex_lock(struct cri_mutex *mutex)
 
 int cri_mutex_unlock(struct cri_mutex *mutex)
 {
+    fprintf(stderr, "cri_mutex_unlock %d %ld\n", getpid(), pthread_self());
 #ifdef HAVE_WIN32_THREADS
     LeaveCriticalSection(&mutex->mutex);
     return 0;

@@ -244,6 +244,7 @@ static int run_test_child(void)
 
 static void death_callback(bxf_instance *instance)
 {
+    fprintf(stderr, "death callback\n");
     int result = instance->status.signal
             ? criterion_protocol_death_result_type_CRASH
             : criterion_protocol_death_result_type_NORMAL;
@@ -270,7 +271,10 @@ static void death_callback(bxf_instance *instance)
                     );
 
     msg.id.pid = instance->pid;
+    fprintf(stderr, "last sendtorun\n");
     cr_send_to_runner(&msg);
+    fprintf(stderr, "last sendtorun end\n");
+    fprintf(stderr, "death callback end\n");
 }
 
 static bxf_instance *run_test(struct run_next_context *ctx,

@@ -30,6 +30,9 @@
 #include "string/fmt.h"
 #include "mutex.h"
 
+#include <stdio.h>
+#include <unistd.h>
+
 int read_message(int sock, criterion_protocol_msg *message)
 {
     int read;
@@ -95,6 +98,7 @@ const char *message_names[] = {
 void cr_send_to_runner(const criterion_protocol_msg *message)
 {
     static struct cri_mutex sync;
+    fprintf(stderr, "cr_send_to_runner %d %ld\n", getpid(), pthread_self());
     int err = cri_mutex_init_once(&sync);
 
     if (err < 0) {
@@ -104,25 +108,30 @@ void cr_send_to_runner(const criterion_protocol_msg *message)
     }
 
     err = cri_mutex_lock(&sync);
+    fprintf(stderr, "in %d %ld\n", getpid(), pthread_self());
     if (err < 0) {
         criterion_perror("Could not lock the global message mutex: %s.\n",
                 strerror(-err));
         abort();
     }
 
+    fprintf(stderr, "b write_message %d %ld\n", getpid(), pthread_self());
     if (write_message(g_client_socket, message) != 1) {
         criterion_perror("Could not write the \"%s\" message down the event pipe: %s.\n",
                 message_names[message->data.which_value],
                 nn_strerror(errno));
         abort();
     }
+    fprintf(stderr, "a write_message %d %ld\n", getpid(), pthread_self());
 
     unsigned char *buf = NULL;
     int read;
 
+    fprintf(stderr, "b recv %d %ld\n", getpid(), pthread_self());
     do {
         read = nn_recv(g_client_socket, &buf, NN_MSG, 0);
     } while (read < 0 && errno == EINTR);
+    fprintf(stderr, "a recv %d %ld\n", getpid(), pthread_self());
 
     err = cri_mutex_unlock(&sync);
     if (err < 0) {
@@ -136,6 +145,7 @@ void cr_send_to_runner(const criterion_protocol_msg *message)
         abort();
     }
 
+    fprintf(stderr, "ackfields %d %ld\n", getpid(), pthread_self());
     criterion_protocol_ack ack;
     pb_istream_t stream = pb_istream_from_buffer(buf, read);
     if (!pb_decode(&stream, criterion_protocol_ack_fields, &ack)) {
@@ -151,6 +161,8 @@ void cr_send_to_runner(const criterion_protocol_msg *message)
 
     if (buf)
         nn_freemsg(buf);
+
+    fprintf(stderr, "cr_send_to_runner end %d %ld\n", getpid(), pthread_self());
 }
 
 void send_ack(int sock, bool ok, const char *msg, ...)
