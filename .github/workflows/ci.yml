@@ -96,10 +96,6 @@ jobs:
     runs-on: ${{ matrix.platform.os || matrix.platform.runs-on || 'ubuntu-latest' }}
     container: ${{ matrix.platform.container || '' }}
 
-    defaults:
-      run:
-        shell: ${{ matrix.platform.shell || 'bash' }}
-
     env:
       python_test_venv_activate: .venv/bin/activate
 
@@ -124,34 +120,30 @@ jobs:
         run: |
           python3 -m venv .venv
 
-          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
-            python_test_venv_activate=".venv/Scripts/activate"
-            echo "python_test_venv_activate=$python_test_venv_activate" >> $GITHUB_ENV
-          fi
-
-          . $python_test_venv_activate
+          .venv\Scripts\activate.ps1
           pip install cram==0.7
 
-          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
-            pip install meson
-            git config --global core.autocrlf false
-            patch --forward --directory=".venv\\Lib\\site-packages\\cram" < ci/cram-fix-winenv.patch
-            patch --forward --directory=".venv\\Lib\\site-packages\\cram" < ci/cram-ignore-cr.patch
-          fi
+          pip install meson
+          git config --global core.autocrlf false
+
+      - name: Prepare MSVC
+        uses: bus1/cabuild/action/msdevshell@v1
+        with:
+          architecture: x64
 
       - name: "Setup"
         run: |
-          . $python_test_venv_activate
+          .venv\Scripts\activate.ps1
           meson setup build
 
       - name: "Build"
         run: |
-          . $python_test_venv_activate
+          .venv\Scripts\activate.ps1
           meson compile -C build
 
       - name: "Test"
         run: |
-          . $python_test_venv_activate
+          .venv\Scripts\activate.ps1
           meson test -C build
 
   binaries:
